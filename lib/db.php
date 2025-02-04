@@ -1,4 +1,6 @@
 <?php
+
+include("../lib/config.php");
 global $conn;
 function connect()
 {
@@ -11,7 +13,6 @@ function connect()
     if ($conn) {
         return $conn;
     } else {
-
         try {
             $dsn = "mysql:host=$servername;dbname=$dbname;charset=utf8mb4";
             $options = [
@@ -26,7 +27,6 @@ function connect()
             // Handle connection errors
             die('Connection failed: ' . $e->getMessage());
         }
-
     }
 }
 
@@ -147,15 +147,43 @@ function prepareEdit($tablename, $data, $where = [])
 }
 
 // <-------------------------- callable functions ---------------------------->
-function getdata($table, $coulmns, $where = [])
+function getdata($table, $coulmns, $where = [], $limit = 0, $offset = 0, $orderBy = [])
 {
-
     $conn = connect();
+    global $conn;
     $sql = prepareSelect($table, $coulmns, $where);
-    $stmt = $conn->prepare($sql);
-    $stmt->execute();
+    if (count($orderBy)) {
+        $sql .= " ORDER BY ";
+        $sql .= implode(" , ", $orderBy);
+        // if(isset($orderBy))
+    }
+    if ($limit) {
+        $sql .= " LIMIT $limit";
+    }
+    if ($offset) {
+        $sql .= " OFFSET $offset ";
+    }
 
-    return  $stmt->fetchAll();
+    $stmt = $conn->prepare($sql);
+
+    $stmt->execute();
+    $data =  $stmt->fetchAll();
+    foreach ($data as &$value) {
+        $value = new Varien_Object($value);
+    }
+    // echo("<pre>");
+    // foreach ( $data as $_data)
+    // {
+    //     $_data->productname = 'xyz';
+    //     print_r($_data->productname);
+    //     echo "<br>";
+    //     print_r($_data->productdescription);
+
+    //     die();
+    // }
+    // print_r($data);
+    // die();
+    return $data;
 }
 
 function deletedata($table, $where)

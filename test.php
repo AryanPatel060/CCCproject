@@ -279,3 +279,14 @@ $apple->name = "Apple";
 
 echo $apple->name;
 ?>
+
+
+<select id='category' name='product[categoryname]' required>
+                    <option value='<?php echo ($producteditactive) ? $product['categoryname'] : ""; ?>'><?php echo ($producteditactive) ? $product['categoryname'] : "select category"; ?> </option>
+                    <?php foreach ($categories as $category): ?>
+                        <?php if ($category['categoryname'] != $product['categoryname']): ?>
+                            <option value='<?php echo $category['categoryname']; ?>'><?php echo $category['categoryname']; ?>
+                            </option>
+                        <?php endif ?>
+                    <?php endforeach ?>
+                </select>

@@ -1,39 +1,46 @@
 <?php
-include_once('../lib/db.php');
+include_once('../lib/config.php');
+// include_once('../lib/db.php');
+// 
 $conn = connect();
+$deleteid = Request::getQuery('delete');
+$categoryid = Request::getQuery('categoryid');
+$editid = Request::getQuery('edit');
+
+
 
 $message = '';
 $editresult = [];
 $updating=true;
-$categoryid = isset($_GET['categoryid']) ? (int) $_GET['categoryid'] : null;
+$categoryid = $categoryid ? (int)$categoryid: null;
 
 if ($categoryid) {
-    if (isset($_GET['delete'])) {
+    if ($deleteid) {
         $result = deletedata('categories', ['categoryid' => $categoryid]);
         $message = $result ? 'Category Deleted Successfully!' : 'Failed to Delete Category.';
         $updating = false;
-    } elseif (isset($_GET['edit'])) {
+    } elseif ($editid) {
         $updating = true;
         $editresult = getdata('categories', ['*'], ['categoryid' => $categoryid]);
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['categories'])) {
-    $categories = $_POST['categories'];
+$categories = Request::getparam('categories');
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $categories) {
     $catagoryname = $categories['categoryname'];
     $checkResult = getdata('categories', ['*'], ['categoryname' => $catagoryname]);
 
-    if ($checkResult && (!isset($_GET['edit']) || $checkResult[0]['categoryid'] != $categoryid)) {
+    if ($checkResult && (!$editid || $checkResult[0]->getcategoryid() != $categoryid)) {
         $message = "Category already exists!";
     } else {
-        if (isset($_GET['edit']) && $categoryid) {
+        if ($editid && $categoryid) {
             $result = editdata('categories', $categories, ['categoryid' => $categoryid]);
-            $message = $result ? 'Category Updated Successfully!' : 'Failed to Update Category.';
+            $message = ($result==1 || $result == 0) ? 'Category Updated Successfully!' : 'Failed to Update Category.';
             $updating = false;
 
         } else {
             $result = insertdata('categories', $categories);
-            $message = $result ? 'Category Inserted Successfully!' : 'Failed to Insert Category.';
+            $message = ($result==1 || $result == 0) ? 'Category Inserted Successfully!' : 'Failed to Insert Category.';
         }
     }
 }
@@ -176,8 +183,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['categories'])) {
             <label for="categoryname">Category Name:</label>
             <!-- <input type="hidden" id="categoryid" name = "categories[categoryid]"> -->
              
-            <input type="text" id="categoryname" name="categories[categoryname]" value="<?php echo ($editresult && $updating)? $editresult[0]['categoryname']:"";?>" required>
-            <input type="submit"id="submitbtn" value=" <?php echo $updating && isset($_GET['categoryid'])  ? 'Update Category' : 'Add Category'; ?>">
+            <input type="text" id="categoryname" name="categories[categoryname]" value="<?php echo ($editresult && $updating)? $editresult[0]->getcategoryname():"";?>" required>
+            <input type="submit"id="submitbtn" value=" <?php echo $updating && $categoryid   ? 'Update Category' : 'Add Category'; ?>">
 
             <div class="error" id="error"></div>
         </form>
@@ -204,11 +211,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['categories'])) {
                 <?php if ($result):?>
                     <?php foreach ($result as $row): ?>
                         <tr>
-                        <td><?php echo $row["categoryid"] ?></td>
-                        <td><?php echo $row["categoryname"]?></td>
+                        <td><?php echo $row->getcategoryid() ?></td>
+                        <td><?php echo $row->getcategoryname()?></td>
                         <td>
-                            <a href="?edit=true&categoryid=<?php echo $row["categoryid"] ?>">Edit</a>
-                            <a href="?delete=true&categoryid=<?php echo $row["categoryid"] ?>" onclick="return confirm('Deleting product: <?php echo $row['categoryname']?>')">Delete</a>
+                            <a href="?edit=true&categoryid=<?php echo $row->getcategoryid() ?>">Edit</a>
+                            <a href="?delete=true&categoryid=<?php echo $row->getcategoryid() ?>" onclick="return confirm('Deleting product: <?php echo $row->getcategoryname()?>')">Delete</a>
                         </td>
                         </tr>
                     <?php endforeach?>
