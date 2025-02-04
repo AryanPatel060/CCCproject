@@ -1,34 +1,39 @@
 <?php
 
-include("../lib/config.php");
 global $conn;
-function connect()
-{
-    global $conn;
-    $servername = 'localhost';
-    $username = 'root';
-    $password = '';
-    $dbname = 'DummyDB';
+global $database;
 
-    if ($conn) {
-        return $conn;
-    } else {
-        try {
-            $dsn = "mysql:host=$servername;dbname=$dbname;charset=utf8mb4";
-            $options = [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-            ];
-            $conn = new PDO($dsn, $username, $password, $options);
+include("database.php");
+$database = Database::getinstance();
+$conn = $GLOBALS['database']->getconnection();
+// function connect()
+// {
+//     global $conn;
+//     $servername = 'localhost';
+//     $username = 'root';
+//     $password = '';
+//     $dbname = 'DummyDB';
 
-            return $conn; // Return the PDO connection
-        } catch (PDOException $e) {
-            // Handle connection errors
-            die('Connection failed: ' . $e->getMessage());
-        }
-    }
-}
+//     if ($conn) {
+//         return $conn;
+//     } else {
+//         try {
+//             $dsn = "mysql:host=$servername;dbname=$dbname;charset=utf8mb4";
+//             $options = [
+//                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+//                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+//                 PDO::ATTR_EMULATE_PREPARES   => false,
+//             ];
+//             $conn = new PDO($dsn, $username, $password, $options);
+
+//             return $conn; // Return the PDO connection
+//         } catch (PDOException $e) {
+//             // Handle connection errors
+//             die('Connection failed: ' . $e->getMessage());
+//         }
+//     }
+// }
+
 
 
 $condition = [];
@@ -147,22 +152,16 @@ function prepareEdit($tablename, $data, $where = [])
 }
 
 // <-------------------------- callable functions ---------------------------->
-function getdata($table, $coulmns, $where = [], $limit = 0, $offset = 0, $orderBy = [])
+function getdata($table, $columns, $where = [], $limit = 0, $offset = 0, $orderBy = [])
 {
-    $conn = connect();
+    $conn = $GLOBALS['database']->getconnection();
     global $conn;
-    $sql = prepareSelect($table, $coulmns, $where);
-    if (count($orderBy)) {
-        $sql .= " ORDER BY ";
-        $sql .= implode(" , ", $orderBy);
-        // if(isset($orderBy))
+    $sql = new Database_Sql_Select();
+    $sql->select($table, $columns);
+    foreach ($where as $field => $value) {
+        $sql->where($field, $value);
     }
-    if ($limit) {
-        $sql .= " LIMIT $limit";
-    }
-    if ($offset) {
-        $sql .= " OFFSET $offset ";
-    }
+    
 
     $stmt = $conn->prepare($sql);
 
@@ -188,7 +187,12 @@ function getdata($table, $coulmns, $where = [], $limit = 0, $offset = 0, $orderB
 
 function deletedata($table, $where)
 {
-    $conn = connect();
+    $conn = $GLOBALS['database']->getconnection();
+    $sql = new Database_Sql_Delete();
+    $sql->delete($table);
+    foreach ($where as $field => $value) {
+        $sql->where($field, $value);
+    }
     $sql = preapereDelete($table, $where);
     $stmt = $conn->prepare($sql);
     $stmt->execute();
@@ -198,7 +202,7 @@ function deletedata($table, $where)
 
 function insertData($table, $data)
 {
-    $conn = connect();
+    $conn = $GLOBALS['database']->getconnection();
     $sql = prepareInsert($table, $data);
     $stmt = $conn->prepare($sql);
     try {
@@ -213,7 +217,7 @@ function insertData($table, $data)
 
 function editdata($table, $data, $where)
 {
-    $conn = connect();
+    $conn = $GLOBALS['database']->getconnection();
     $sql = prepareEdit($table, $data, $where);
     $stmt = $conn->prepare($sql);
     try {

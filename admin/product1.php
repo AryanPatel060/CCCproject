@@ -1,7 +1,7 @@
 <?php
 
 include_once('../lib/config.php');
-include_once('../lib/db.php');
+// include_once('../lib/db.php');
 
 $editproductid = Request::getQuery('edit_productid');
 $deleteproductid = Request::getQuery('delete_productid');
@@ -19,7 +19,7 @@ $producteditactive = false;
 $message = "";
 $error = "";
 $limit = 5;
-$offset = ($offsetfromquery) ? (int)$offsetfromquery: 0;
+$offset = ($offsetfromquery) ? (int)$offsetfromquery : 0;
 $next = 0;
 $totalpages = 0;
 

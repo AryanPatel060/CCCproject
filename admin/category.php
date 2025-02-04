@@ -2,11 +2,12 @@
 include_once('../lib/config.php');
 // include_once('../lib/db.php');
 // 
-$conn = connect();
 $deleteid = Request::getQuery('delete');
 $categoryid = Request::getQuery('categoryid');
 $editid = Request::getQuery('edit');
 
+$sql = new Database_Sql_Select();
+$sql->select("products",["*"]);
 
 
 $message = '';
@@ -28,7 +29,7 @@ if ($categoryid) {
 $categories = Request::getparam('categories');
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && $categories) {
     $catagoryname = $categories['categoryname'];
-    $checkResult = getdata('categories', ['*'], ['categoryname' => $catagoryname]);
+    $checkResult = getdata('categories', ['*'], ['categoryname'=>['=' => $catagoryname]]);
 
     if ($checkResult && (!$editid || $checkResult[0]->getcategoryid() != $categoryid)) {
         $message = "Category already exists!";
@@ -207,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $categories) {
                 </tr>
             </thead>
             <tbody>
-                <?php $result = getdata('categories',["*"])?>
+                <?php $result = getdata('categories',['*'])?>
                 <?php if ($result):?>
                     <?php foreach ($result as $row): ?>
                         <tr>
